@@ -51,18 +51,21 @@ class Downloader:
                 set_path.mkdir(parents=True, exist_ok=True)
 
                 for img_index, img_url in enumerate(set_img_urls):
-                    img_path = set_path / f"i{img_index}.jpg"
+                    try:
+                        img_path = set_path / f"i{img_index}.jpg"
 
-                    if not img_path.exists():
-                        print('\t>IMG: downloading img:', img_index)
+                        if not img_path.exists():
+                            print('\t>IMG: downloading img:', img_index)
 
-                        if self.solver:
-                            img_src = self.solver.solve(img_url)
-                        else:
-                            img_src = img_url
+                            if self.solver:
+                                img_src = self.solver.solve(img_url)
+                            else:
+                                img_src = img_url
 
-                        self._download_image_simple(img_src, img_path)
-                        time.sleep(self.img_sleep_secs)
+                            self._download_image_simple(img_src, img_path)
+                            time.sleep(self.img_sleep_secs)
+                    except:
+                        print("\tIMG: failed download:", img_url)
             else:
                 print('xSET: skipping set (too small):', set_index)
 
