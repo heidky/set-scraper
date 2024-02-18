@@ -17,15 +17,15 @@ def get_headers(cookie):
         # "Cache-Control": "max-age=0",
         "Cookie": cookie,
         # "If-Modified-Since": "Sat, 03 Feb 2024 16:01:22 GMT",
-        # "Referer": "https://simpcity.su/threads/jessica-nigri.9946/",
-        # "Sec-Ch-Ua": 'Not A(Brand";v="99", "Brave";v="121", "Chromium";v="121',
-        # "Sec-Ch-Ua-Mobile": "?0",
-        # "Sec-Ch-Ua-Platform": "Windows",
-        # "Sec-Fetch-Dest": "empty",
-        # "Sec-Fetch-Mode": "navigate",
-        # "Sec-Fetch-Site": "same-origin",
-        # "Sec-Gpc": "1",
-        # "Upgrade-Insecure-Requests": "1",
+        "Referer": "https://simpcity.su/threads/jessica-nigri.9946/",
+        "Sec-Ch-Ua": 'Not A(Brand";v="99", "Brave";v="121", "Chromium";v="121',
+        "Sec-Ch-Ua-Mobile": "?0",
+        "Sec-Ch-Ua-Platform": "Windows",
+        "Sec-Fetch-Dest": "empty",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Site": "same-origin",
+        "Sec-Gpc": "1",
+        "Upgrade-Insecure-Requests": "1",
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
     })
 
@@ -184,7 +184,7 @@ class Post_Sc():
         response = requests.get(self.url, headers=self.headers)
         soup = BeautifulSoup(response.text, "html.parser")
         article = soup.select_one(f"article#js-{post_id}")
-        
+
         if article is None:
             print(response.text)
         # img_list = article.select("article.message-body img")

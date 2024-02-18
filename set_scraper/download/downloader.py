@@ -5,6 +5,7 @@ import time
 from pathlib import Path
 import io
 from PIL import Image
+from progress.bar import FillingSquaresBar as Bar
 
 
 def get_headers(cookie=''): 
@@ -95,6 +96,8 @@ class DownloaderSimple:
         size = len(self.url_list)
         print(f"downloading set: {self.output_path} ({size} images)")
         self.output_path.mkdir(parents=True, exist_ok=True)
+
+        skipped = []
         
         for index, url in enumerate(self.url_list):
             img_path = self.output_path / f'i{index+1}.jpg'
@@ -113,7 +116,11 @@ class DownloaderSimple:
 
                 time.sleep(self.sleep_seconds)
             else:
-                print(f"---> skip")
+                skipped.append(index)
+                print(f" ---> skip")  
+
+        time.sleep(1)
+        # print(f"skipped {len(skipped)}:", skipped)
 
 
 
