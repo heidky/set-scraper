@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "set-scraper"
+version = "0.1.0"
+description = ""
+authors = ["HeidKy <heid.ky8@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.11,<3.12"
+python-dotenv = "^1.0.1"
+pillow = "^10.2.0"
+requests = "^2.31.0"
+beautifulsoup4 = "^4.12.3"
+rembg = "^2.0.54"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

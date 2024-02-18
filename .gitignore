@@ -1,5 +1,8 @@
 .env
 sets
+sets**
 build
 __pycache__
 .vscode
+.venv
+playground
