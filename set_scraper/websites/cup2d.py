@@ -17,7 +17,7 @@ HEADERS = {
 }
 
 
-class Post_Bunkr():
+class Post_Cup2d():
     def __init__(self, url, name):
         self.url = url
         self.name = name
@@ -27,15 +27,15 @@ class Post_Bunkr():
         response = requests.get(self.url, headers=self.headers)
         soup = BeautifulSoup(response.text, "html.parser")
 
-        img_list = soup.select(f"div.grid-images img")
+        img_list = soup.select(f"div.entry-content > div > a > img")
+        a_list = [img.parent for img in img_list if '.jpg' in img.get('src')]
 
         src_list = []
 
-        for index, img in enumerate(img_list):
-            src_thumb = img.get('src')
+        for index, a in enumerate(a_list):
+            src = a.get('href')
 
-            if src_thumb is not None:
-                src = src_thumb.replace('/thumbs/', '/').replace('.png', '.jpg')
+            if src is not None:
                 src_list.append(src)
             else:
                 print(f"skipped image with index {index}")
