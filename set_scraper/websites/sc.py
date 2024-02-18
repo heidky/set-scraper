@@ -31,9 +31,6 @@ def get_headers(cookie):
 
 
 class SrcSolver_SC_Fast:
-    def __init__(self):
-        self.headers = get_headers('')
-
     def solve(self, url):
         return url.replace('.md.', '.')
 
@@ -175,4 +172,33 @@ class Thread_SC:
 
 
 
+class Post_Sc():
+    def __init__(self, url, name, *, cookie):
+        self.url = url
+        self.name = name
+        self.headers = get_headers(cookie)
 
+    def get_images(self):
+        post_id = self.url.split("/")[-1]
+
+        response = requests.get(self.url, headers=self.headers)
+        soup = BeautifulSoup(response.text, "html.parser")
+        article = soup.select_one(f"article#js-{post_id}")
+        
+        if article is None:
+            print(response.text)
+        # img_list = article.select("article.message-body img")
+        img_list = article.select("div.bbWrapper img")
+
+        src_list = []
+
+        for index, img in enumerate(img_list):
+            src = img.get('src')
+
+            if src is not None:
+                src = src.replace('.md.', '.')
+                src_list.append(src)
+            else:
+                print(f"skipped image with index {index}")
+
+        return src_list

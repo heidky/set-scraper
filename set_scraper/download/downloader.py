@@ -3,14 +3,12 @@ from bs4 import BeautifulSoup
 from collections import defaultdict
 import time
 from pathlib import Path
+import io
+from PIL import Image
 
 
 def get_headers(cookie=''): 
     return ({
-        # ":authority": "simpcity.su",
-        # ":method": "GET",
-        # ":path": "/threads/jessica-nigri.9946/page-29",
-        # ":scheme": "https",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
         "Accept-Encoding": "gzip, deflate, br",
         "Accept-Language": "en-US,en;q=0.9",
@@ -82,3 +80,61 @@ class Downloader:
         with open(path, 'wb') as handler:
             handler.write(response.content)
 
+
+
+class DownloaderSimple:
+    def __init__(self, url_list, output_path, *, sleep_seconds=0.25, processing=[]):
+        self.url_list = url_list
+        self.output_path = Path(output_path)
+        self.sleep_seconds = sleep_seconds
+        self.headers = get_headers()
+        self.processing = processing
+
+    
+    def download(self):
+        size = len(self.url_list)
+        print(f"downloading set: {self.output_path} ({size} images)")
+        self.output_path.mkdir(parents=True, exist_ok=True)
+        
+        for index, url in enumerate(self.url_list):
+            img_path = self.output_path / f'i{index+1}.jpg'
+
+            print(f"\timg ({index+1}/{size})", end='')
+
+            if not img_path.exists():
+                print()
+
+                try:
+                    image = self._download_image(url)
+                    image = self._process_image(image)
+                    self._save_image(image, img_path)
+                except Exception as e:
+                    print(e)
+
+                time.sleep(self.sleep_seconds)
+            else:
+                print(f"---> skip")
+
+
+
+    def _download_image(self, src) -> Image.Image:        
+        response = requests.get(src, headers=self.headers, timeout=1000)
+
+        if response.status_code != 200:
+            print("\tDWN: src download failed", response.status_code, src)
+
+        image_data = io.BytesIO(response.content)
+        return Image.open(image_data)
+    
+
+    def _process_image(self, input_image: Image.Image) -> Image.Image:
+        output_image = input_image
+
+        for p in self.processing:
+            output_image = p.process(output_image)
+
+        return output_image
+    
+
+    def _save_image(self, image: Image.Image, path):
+        image.save(path, format='JPEG')

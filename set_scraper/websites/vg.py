@@ -95,26 +95,26 @@ class TurboReplacer(Replacer):
     soup = BeautifulSoup(response.content, "html.parser")
     img = soup.select_one('#imageid')
     if not img:
-      raise RuntimeError('no img', a_url)
+        raise RuntimeError('no img', a_url)
     return img['src']
 
 class ImageBam(Replacer):
-  matcher: str = r'imagebam\.com/'
+    matcher: str = r'imagebam\.com/'
 
-  def transform(self, url: str, a_url: str=None) -> str:
-    for _ in range(2):
-      response = session.get(a_url, headers=HEADERS)
-      # print(response.cookies)
-      # print(response.cookies)
-      # with open('imagebam.html', 'wb') as f:
-      #   f.write(response.content)
-      # raise Error('nope')
-      soup = BeautifulSoup(response.content, "html.parser")
-      img = soup.select_one('.main-image')
-      if img:
-        return img['src']
+    def transform(self, url: str, a_url: str=None) -> str:
+        for _ in range(2):
+            response = session.get(a_url, headers=HEADERS)
+            # print(response.cookies)
+            # print(response.cookies)
+            # with open('imagebam.html', 'wb') as f:
+            #   f.write(response.content)
+            # raise Error('nope')
+            soup = BeautifulSoup(response.content, "html.parser")
+            img = soup.select_one('.main-image')
+            if img:
+                return img['src']
 
-    raise RuntimeError('no img', a_url)
+        raise RuntimeError('no img', a_url)
 
 
 replacers: list[Replacer] = [
@@ -182,4 +182,31 @@ class Thread_VG:
        self.extract_sets()
        self.solve_sets()
        return self.sets
-           
+
+
+class Post_Vg:
+    def __init__(self, url, name):
+        self.url = url
+        self.name = name
+        self.headers = HEADERS
+        self.solver = SrcSolver_VG()
+
+    def get_images(self):
+        response = requests.get(self.url, headers=self.headers)
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        url_list = []
+        for a in soup.select('.content a'):
+            img = a.select_one('img')
+            if img:
+                url_list.append((img['src'], a['href']))
+        
+        src_list = []
+        for index, url in enumerate(url_list):
+            if url is not None:
+                src = self.solver.solve(url)
+                src_list.append(src)
+            else:
+                print(f"skipped image with index {index}")
+
+        return src_list
