@@ -5,7 +5,7 @@ import time
 from pathlib import Path
 import io
 from PIL import Image
-from progress.bar import FillingSquaresBar as Bar
+from tqdm import tqdm
 
 
 def get_headers(cookie=''): 
@@ -84,43 +84,44 @@ class Downloader:
 
 
 class DownloaderSimple:
-    def __init__(self, url_list, output_path, *, sleep_seconds=0.25, processing=[]):
+    def __init__(self, url_list, output_path, *, sleep_seconds=0.25, processing=[], ignore=[]):
         self.url_list = url_list
         self.output_path = Path(output_path)
         self.sleep_seconds = sleep_seconds
         self.headers = get_headers()
         self.processing = processing
+        self.ignore = [] if ignore is None else ignore
 
     
     def download(self):
         size = len(self.url_list)
-        print(f"downloading set: {self.output_path} ({size} images)")
+        print(f">>> downloading set: {self.output_path} ({size} images)")
         self.output_path.mkdir(parents=True, exist_ok=True)
 
-        skipped = []
-        
-        for index, url in enumerate(self.url_list):
+        error_count = 0
+
+        for index, url in tqdm(list(enumerate(self.url_list)), ncols=200):
+            if index+1 in self.ignore:
+                tqdm.write(f"\ti{index+1}: ignored")
+                continue
+
             img_path = self.output_path / f'i{index+1}.jpg'
 
-            print(f"\timg ({index+1}/{size})", end='')
-
             if not img_path.exists():
-                print()
-
                 try:
                     image = self._download_image(url)
                     image = self._process_image(image)
                     self._save_image(image, img_path)
                 except Exception as e:
-                    print(e)
+                    error_count += 1
+                    tqdm.write(f"\ti{index+1}: " + str(e))
 
                 time.sleep(self.sleep_seconds)
             else:
-                skipped.append(index)
-                print(f" ---> skip")  
+                time.sleep(0.02)
 
         time.sleep(1)
-        # print(f"skipped {len(skipped)}:", skipped)
+        return error_count == 0
 
 
 
@@ -128,7 +129,7 @@ class DownloaderSimple:
         response = requests.get(src, headers=self.headers, timeout=1000)
 
         if response.status_code != 200:
-            print("\tDWN: src download failed", response.status_code, src)
+            raise RuntimeError(f"download failed with {response.status_code} from {src}")
 
         image_data = io.BytesIO(response.content)
         return Image.open(image_data)
@@ -143,5 +144,11 @@ class DownloaderSimple:
         return output_image
     
 
-    def _save_image(self, image: Image.Image, path):
-        image.save(path, format='JPEG')
+    def _save_image(self, image: Image.Image, path: Path):
+        if path.with_suffix(".jpg"):
+            image.save(path, format='JPEG')
+        elif path.with_suffix(".png"):
+            image.save(path, format='PNG')
+        else:
+            raise ValueError("Unknown image format for:", path)
+

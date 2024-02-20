@@ -9,16 +9,48 @@ import download.downloader as dw
 from pathlib import Path
 import processing.static as ps
 import yaml
+import json
 
 
 load_dotenv()
 sc_cookie = os.getenv("SC_COOKIE")
 
 
-def scrape_post(set_name, url, path='sets/original'):
-    output_path = Path('.') / path / set_name
-    post = None
+class SetCache:
+    def __init__(self, path: Path):
+        self.path = path
+        self.cache_file = self.path / '.cache.json'
+        self.cache_data = dict()
+        
+        self.__read()
+      
 
+    def __read(self):
+        if self.cache_file.exists():
+            with open(self.cache_file, 'r') as f:
+                self.cache_data = json.load(f)
+
+    def __write(self):
+        with open(self.cache_file, 'w') as f:
+            json.dump(self.cache_data, f, indent=2)
+
+    def get_srcs(self):
+        return self.cache_data.get('srcs')
+    
+    def put_srcs(self, srcs):
+        self.cache_data['srcs'] = srcs
+        self.__write()
+
+    def is_completed(self):
+        return self.cache_data.get('completed')
+
+    def mark_completed(self, is_compled=True):
+        self.cache_data['completed'] = is_compled
+        self.__write()
+    
+
+def get_post(url: str, set_name: str):
+    post = None
     match url:
         case _ if '://bunkr.' in url or '://bunkrr.' in url:
             post = bunkr.Post_Bunkr(url, set_name)
@@ -28,18 +60,46 @@ def scrape_post(set_name, url, path='sets/original'):
             post = sc.Post_Sc(url, set_name, cookie=sc_cookie)
         case _ if '://www.cup2d.' in url:
             post = cup2d.Post_Cup2d(url, set_name)
+    return post
 
-    if post is None:
-        raise RuntimeError("Not valid match for url:", url)
+
+def scrape_post(set_name, url, path='sets/original', *, ignore=[], bypass_completed=False):
+
+    output_path = Path('.') / path / set_name
+    post = None
+
+    cache = SetCache(output_path)
+
+    if not bypass_completed and cache.is_completed():
+        # print(">>> download already completed")
+        return
     
-    images = post.get_images()
+    print(f"\n=== [{set_name}] ===")
+
+    srcs = cache.get_srcs()
+    if srcs is None:
+        post = get_post(url, set_name)
+
+        if post is None:
+            raise RuntimeError("Not valid match for url:", url)
+    
+        srcs = post.get_images()
+        cache.put_srcs(srcs)
+    else:
+        print('>>> set cache hit:', output_path)
 
     processing = [ps.Resizer('2K')]
-    downloader = dw.DownloaderSimple(images, output_path, processing=processing)
-    downloader.download()
+    downloader = dw.DownloaderSimple(srcs, output_path, processing=processing, ignore=ignore)
+    is_completed = downloader.download()
+
+    if is_completed:
+        print(">>> marked completed")
+        cache.mark_completed()
 
 
-if __name__ == '__main__':
+def main():
+    print("scraping...")
+
     if len(sys.argv) == 3 and sys.argv[1] == '-f':
         with open(sys.argv[2], 'r') as f:
             sets_file = yaml.safe_load(f)
@@ -48,7 +108,12 @@ if __name__ == '__main__':
 
         for set_data in sets_file['sets']:
             name, url = set_data['name'], set_data['url']
-            scrape_post(name, url, path=path)
+            ignore = set_data.get('ignore')
+            scrape_post(name, url, path=path, ignore=ignore)
+
+
+if __name__ == '__main__':
+    main()
     
 
 
