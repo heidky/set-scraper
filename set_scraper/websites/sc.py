@@ -14,10 +14,10 @@ def get_headers(cookie):
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
         "Accept-Encoding": "gzip, deflate, br",
         "Accept-Language": "en-US,en;q=0.9",
-        # "Cache-Control": "max-age=0",
+        "Cache-Control": "max-age=0",
         "Cookie": cookie,
         # "If-Modified-Since": "Sat, 03 Feb 2024 16:01:22 GMT",
-        "Referer": "https://simpcity.su/threads/jessica-nigri.9946/",
+        # "Referer": "https://simpcity.su/threads/jessica-nigri.9946/",
         "Sec-Ch-Ua": 'Not A(Brand";v="99", "Brave";v="121", "Chromium";v="121',
         "Sec-Ch-Ua-Mobile": "?0",
         "Sec-Ch-Ua-Platform": "Windows",
@@ -25,7 +25,6 @@ def get_headers(cookie):
         "Sec-Fetch-Mode": "navigate",
         "Sec-Fetch-Site": "same-origin",
         "Sec-Gpc": "1",
-        "Upgrade-Insecure-Requests": "1",
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
     })
 
@@ -178,15 +177,19 @@ class Post_Sc():
         self.name = name
         self.headers = get_headers(cookie)
 
+
     def get_images(self):
         post_id = self.url.split("/")[-1]
 
-        response = requests.get(self.url, headers=self.headers)
+        response = requests.get(self.url, headers=self.headers)            
         soup = BeautifulSoup(response.text, "html.parser")
         article = soup.select_one(f"article#js-{post_id}")
 
         if article is None:
-            print(response.text)
+            with open(self.name + '__error.html', 'w', encoding='utf-8') as f:
+                f.write(response.text)
+            raise RuntimeError("Invalid HTML page")
+
         # img_list = article.select("article.message-body img")
         img_list = article.select("div.bbWrapper img")
 

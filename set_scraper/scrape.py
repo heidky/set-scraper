@@ -12,9 +12,8 @@ import yaml
 import json
 
 
-load_dotenv()
-sc_cookie = os.getenv("SC_COOKIE")
-
+load_dotenv(verbose=True, override=True)
+SC_COOKIE = os.getenv("SC_COOKIE") 
 
 class SetCache:
     def __init__(self, path: Path):
@@ -31,6 +30,8 @@ class SetCache:
                 self.cache_data = json.load(f)
 
     def __write(self):
+        self.cache_file.parent.mkdir(parents=True, exist_ok=True)
+
         with open(self.cache_file, 'w') as f:
             json.dump(self.cache_data, f, indent=2)
 
@@ -57,7 +58,7 @@ def get_post(url: str, set_name: str):
         case _ if '://vipergirls.' in url:
             post = vg.Post_Vg(url, set_name)
         case _ if '://simpcity.' in url:
-            post = sc.Post_Sc(url, set_name, cookie=sc_cookie)
+            post = sc.Post_Sc(url, set_name, cookie=SC_COOKIE)
         case _ if '://www.cup2d.' in url:
             post = cup2d.Post_Cup2d(url, set_name)
     return post

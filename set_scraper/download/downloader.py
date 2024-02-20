@@ -126,7 +126,7 @@ class DownloaderSimple:
 
 
     def _download_image(self, src) -> Image.Image:        
-        response = requests.get(src, headers=self.headers, timeout=1000)
+        response = requests.get(src, headers=self.headers, timeout=5)
 
         if response.status_code != 200:
             raise RuntimeError(f"download failed with {response.status_code} from {src}")
