@@ -9,7 +9,7 @@ def resize_to_screen(img: Image.Image, w_screen: int, h_screen: int) -> Image.Im
     if ratio <= 1:
         return img.copy()
     else:
-        new_size = (floor(w/ratio), floor(h/ratio))
+        new_size = (round(w/ratio), round(h/ratio))
         return img.resize(new_size)
     
 
